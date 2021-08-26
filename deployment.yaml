@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kratos
+  labels:
+    app: kratos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kratos
+  template:
+    metadata:
+      labels:
+        app: kratos
+    spec:
+      containers:
+      - name: kratos
+        image: acrtimdemo.azurecr.io/kratos:latest
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 4433
+        env:
+        - name: DSN
+          value: memory
+        - name: HTTPS_METHOD
+          value: redirect
+        - name: LETSENCRYPT_HOST
+          value: auth.aiv.liquidstudiobr.com
+        - name: LOG_LEVEL
+          value: trace
+        - name: SESSION_COOKIE_DOMAIN
+          value: aiv.liquidstudiobr.com
+        - name: SESSION_COOKIE_SAME_SITE
+          value: Lax
+        - name: VIRTUAL_HOST
+          value: auth.aiv.liquidstudiobr.com
+        - name: VIRTUAL_PORT
+          value: "4433"
+        - name: VIRTUAL_PROTO
+          value: http
+      - name: mailslurper
+        image: oryd/mailslurper:latest-smtps
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 4436
+        - containerPort: 4437
+      initContainers:
+        - name: kratos-migrate
+          image: acrtimdemo.azurecr.io/kratos-migrate:latest 
+
+        
+

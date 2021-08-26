@@ -1,0 +1,112 @@
+version: v0.5.5-alpha.1
+
+dsn: memory
+
+serve:
+  public:
+    base_url: http://127.0.0.1:4433/
+    cors:
+      enabled: true
+      allowed_origins:
+        - http://127.0.0.1:3000
+        - http://127.0.0.1:4433
+        - http://127.0.0.1:4434
+      allowed_methods:
+        - POST
+        - GET
+        - PUT
+        - PATCH
+        - DELETE
+      allowed_headers:
+        - Authorization
+        - Cookie
+      exposed_headers:
+        - Content-Type
+        - Set-Cookie
+  admin:
+    base_url: http://kratos:4434/
+
+selfservice:
+  default_browser_return_url: http://127.0.0.1:3000/
+  whitelisted_return_urls:
+    - http://127.0.0.1:3000
+
+  methods:
+    password:
+      enabled: true
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: azure-ad # this is `<provider-id>` in the Authorization callback URL. DO NOT CHANGE IT ONCE SET!
+            provider: microsoft
+            client_id: e5581cc8-943e-4f68-a3b9-c31615ca191e # Replace this with the Application ID from the App Registration
+            client_secret: m772GL~vG~8x~CE3q.Ayq-.PEZje67rot9 # Replace this with the generated Secret value from the App Registration
+            tenant: organizations
+            mapper_url: file:///home/ory/oidc.microsoft.jsonnet
+            scope:
+              - profile
+              - email
+
+  flows:
+    error:
+      ui_url: http://127.0.0.1:3000/error
+
+    settings:
+      ui_url: http://127.0.0.1:3000/settings
+      privileged_session_max_age: 15m
+
+    recovery:
+      enabled: true
+      ui_url: http://127.0.0.1:3000/recovery
+
+    verification:
+      enabled: false
+      ui_url: http://127.0.0.1:3000/verify
+      after:
+        default_browser_return_url: http://127.0.0.1:3000/
+
+    logout:
+      after:
+        default_browser_return_url: http://127.0.0.1:3000/login
+
+    login:
+      ui_url: http://127.0.0.1:3000/login
+      lifespan: 10m
+
+    registration:
+      lifespan: 10m
+      ui_url: http://127.0.0.1:3000/registration
+      after:
+        password:
+          hooks:
+            -
+              hook: session
+        oidc:
+          hooks:
+            -
+              hook: session
+
+log:
+  level: debug
+  format: text
+  leak_sensitive_values: true
+
+secrets:
+  cookie:
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+
+hashers:
+  argon2:
+    parallelism: 1
+    memory: 131072
+    iterations: 2
+    salt_length: 16
+    key_length: 16
+
+identity:
+  default_schema_url: file:///home/ory/identity.schema.json
+
+courier:
+  smtp:
+    connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true
